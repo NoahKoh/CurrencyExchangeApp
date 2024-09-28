@@ -2,10 +2,14 @@ package com.example.currencyexchange
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.inputmethod.InputBinding
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.currencyexchange.databinding.ActivityMainBinding
@@ -54,20 +58,43 @@ class MainActivity : AppCompatActivity() {
             }
             else
             {
-
-                binding.baseCurrency.text = "Connection Failed"
+                runOnUiThread{
+                    binding.baseCurrency.text = "Connection Failed"
+                }
             }
         }
     }
 
     private fun updateUI(request: Request) {
         runOnUiThread {
-            kotlin.run {
                 binding.lastUpdated.text = request.time_last_update_utc
-                binding.usd.text = String.format("USD: %.2f", request.rates.USD)
-                binding.eur.text = String.format("EUR: %.2f", request.rates.EUR)
-                binding.jpy.text = String.format("JPY: %.2f", request.rates.JPY)
-            }
+
+
+                binding.currencyContainer.removeAllViews()
+
+                val typedValue = TypedValue()
+                theme.resolveAttribute(R.attr.colorOnBackground, typedValue, true)
+                val colorOnBackground = typedValue.data
+
+                for ((currency, rate) in request.rates) {
+                    if (currency == request.base_code) {
+                        continue
+                    }
+
+                    val textView = TextView(this).apply {
+                        text = String.format("%s: %.2f", currency, rate)
+                        textSize = 20f
+                        setTextColor(colorOnBackground)
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            gravity = android.view.Gravity.CENTER_HORIZONTAL
+                        }
+                        gravity = android.view.Gravity.CENTER
+                    }
+                    binding.currencyContainer.addView(textView)
+                }
         }
     }
 }
